@@ -5,9 +5,10 @@ const Chat = () => {
   const [sessionId, setSessionId] = useState('');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
-
+const [sessions, setSessions] = useState()
 
     useEffect(() => {
+        fetchSessions()
         const response = fetch('http://localhost:8000/init', {
         method: 'GET',
       }).then((response) => {
@@ -53,11 +54,47 @@ const Chat = () => {
     }
   };
 
+  const fetchSessionMessages = async (sessionId) => {
+    try {
+      const response = await fetch(`http://localhost:8000/session/${sessionId}`);
+      const data = await response.json();
+      setMessages(data.messages);
+    } catch (error) {
+      console.error('Error fetching session messages:', error);
+    }
+  };
+
+  const handleSessionChange = (event) => {
+    setSessionId(event.target.value);
+    fetchSessionMessages(event.target.value);
+  };
+
+  const fetchSessions = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/sessions');
+      const data = await response.json();
+      setSessions(data.session_ids);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+    }
+  };
+
   return (
     <div>
       <h1>Chat with Assistant</h1>
+      <div>
+        <label htmlFor="sessions">Select a session: </label>
+        <select id="sessions" value={sessionId} onChange={handleSessionChange}>
+          <option value="">New Session</option>
+          {sessions && sessions.map((id) => (
+            <option key={id} value={id}>
+              {id}
+            </option>
+          ))}
+        </select>
+      </div>
       <div style={{ marginBottom: '20px' }}>
-        {messages.map((msg, index) => (
+        {messages && messages.map((msg, index) => (
           <div key={index} style={{ padding: '5px 0' }}>
             <strong>{msg.role}:</strong> {msg.content}
           </div>
